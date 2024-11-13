@@ -6,5 +6,8 @@ forum:
     MONGODB_HOST: "{{ MONGODB_HOST }}"
     MONGODB_PORT: "{{ MONGODB_PORT }}"
     MONGODB_DATABASE: "{{ FORUM_MONGODB_DATABASE }}"
+    API_KEY: "{{ FORUM_API_KEY }}"
   restart: unless-stopped
+  ports:
+    - "4567:4567"
   depends_on: {{ [("elasticsearch", RUN_ELASTICSEARCH), ("mongodb", RUN_MONGODB)]|list_if }}
