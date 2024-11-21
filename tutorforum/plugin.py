@@ -12,6 +12,7 @@ config = {
         "VERSION": __version__,
         "DOCKER_IMAGE": "{{ DOCKER_REGISTRY }}overhangio/openedx-forum:{{ FORUM_VERSION }}",
         "MONGODB_DATABASE": "cs_comments_service",
+        "HOST": "forum.{{ LMS_HOST }}",
         "PORT": "4567",
         "API_KEY": "forumapikey",
     },
