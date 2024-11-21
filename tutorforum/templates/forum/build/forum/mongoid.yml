@@ -1,0 +1,87 @@
+common: &default_client
+  options:
+    write:
+      w: <%= ENV['MONGOID_WRITE_MODE'] || 1 %>
+    read:
+      mode: :<%= ENV['MONGOID_READ_MODE'] || 'primary' %>
+    max_retries: <%= ENV['MONGOID_MAX_RETRIES'] || 1 %>
+    retry_interval: <%= ENV['MONGOID_RETRY_INTERVAL'] || 0 %>
+    timeout: <%= ENV['MONGOID_TIMEOUT'] || 0.5 %>
+    ssl: <%= ENV['MONGOID_USE_SSL'] || false %>
+    auth_source: <%= ENV['MONGOID_AUTH_SOURCE'] || '' %>
+    auth_mech: <%= ENV['MONGOID_AUTH_MECH'].nil? ? ':scram' : ENV['MONGOID_AUTH_MECH'] %>
+
+common_uri: &default_uri
+  uri: <%= ENV['MONGOHQ_URL'] %>
+
+# This defines a secondary session at a replica set.
+common_replica_set: &default_replica_set_client
+  # Todo: This didn't work, so instead went with the uri configuration for `mongo+srv://` protocol.
+  # This configuration is a 3 node replica set.
+  # hosts:
+  #   - ew-maple-shard-00-02.1spck.mongodb.net:27017
+  #   - ew-maple-shard-00-00.1spck.mongodb.net:27017
+  #   - ew-maple-shard-00-01.1spck.mongodb.net:27017
+  # database: cs_comments_service
+  # username: :<%= ENV['MONGODB_USERNAME'] || '' %>
+  # password: :<%= ENV['MONGODB_PASSWORD'] || '' %>
+  # We can set session specific options, like reads executing
+  # on secondary nodes, and defaulting the session to safe mode.
+  options:
+    connect: :replica_set
+    connect_timeout: 2
+    socket_timeout: 6
+    replica_set: atlas-8mdjf4-shard-0
+    write:
+      w: :majority
+    read:
+      mode: :secondary
+    ssl: <%= ENV['MONGOID_USE_SSL'] || false %>
+    auth_source: <%= ENV['MONGOID_AUTH_SOURCE'] || '' %>
+    auth_mech: <%= ENV['MONGOID_AUTH_MECH'].nil? ? ':scram' : ENV['MONGOID_AUTH_MECH'] %>
+
+development:
+  clients:
+    default:
+      <<: *default_uri
+      <<: *default_client
+
+test:
+  clients:
+    default:
+      <<: *default_uri
+      <<: *default_client
+
+production:
+  clients:
+    default:
+      <<: *default_uri
+      <<: *default_replica_set_client   
+
+edgeprod:
+  clients:
+    default:
+      <<: *default_uri
+      <<: *default_client
+
+edgestage:
+  clients:
+    default:
+      <<: *default_uri
+      <<: *default_client
+
+staging:
+  clients: 
+    default:
+      <<: *default_uri
+      <<: *default_replica_set_client   
+
+loadtest:
+  clients:
+    default:
+      <<: *default_uri
+      <<: *default_client
+
+defaults: &defaults
+  use_utc: false
+  use_activesupport_time_zone: true

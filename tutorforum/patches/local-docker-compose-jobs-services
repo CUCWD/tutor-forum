@@ -3,7 +3,22 @@ forum-job:
   environment:
     SEARCH_SERVER: "{{ ELASTICSEARCH_SCHEME }}://{{ ELASTICSEARCH_HOST }}:{{ ELASTICSEARCH_PORT }}"
     MONGODB_AUTH: "{% if MONGODB_USERNAME and MONGODB_PASSWORD %}{{ MONGODB_USERNAME}}:{{ MONGODB_PASSWORD }}@{% endif %}"
-    MONGODB_HOST: "{{ MONGODB_HOST }}"
+
+    {% if EDUCATEWORKFORCE_CONFIG_RUN_MONGODB_ATLASDB %}
+    # Hard coding this Atlas endpoint until we can figure out
+    # why the provided 'ew-maple.1spck.mongodb.net' won't resolve.
+    # Decided not to make this a tutor environment variable for now
+    # to avoid confusion with Django MongoDB cluster endpoint of mutliple shards.
+    MONGODB_HOST: "atlas-8mdjf4-shard-00-00.1spck.mongodb.net"
+    MONGODB_PORT: "27017"
+    MONGOID_AUTH_SOURCE: "admin"
+    MONGOID_USE_SSL: true
+    ENABLE_MONGO_DEBUGGING: true
+    {% else %}
+    # This is relevant to staging and development environments.
+    MONGODB_HOST: "{{ MONGODB_HOST}}"
     MONGODB_PORT: "{{ MONGODB_PORT }}"
+    {% endif %}
+
     MONGODB_DATABASE: "{{ FORUM_MONGODB_DATABASE }}"
   depends_on: {{ [("elasticsearch", RUN_ELASTICSEARCH), ("mongodb", RUN_MONGODB)]|list_if }}

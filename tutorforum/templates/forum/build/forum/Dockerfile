@@ -1,37 +1,15 @@
-FROM docker.io/ruby:2.5.7-slim-stretch
-MAINTAINER Overhang.IO <contact@overhang.io>
+# Because the version of Debian `Slim` is LTS not supported we
+# need to build from this previous image.
 
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt update && \
-  apt upgrade -y && \
-  apt install -y git wget autoconf bison build-essential libssl-dev libyaml-dev libreadline6-dev zlib1g-dev libncurses5-dev libffi-dev libgdbm-dev
+# Because we have not extended the `cs_comments_service` ruby application and
+# only modified the MongoDB Atlas replica set connection string information
+# there is no need to fork this repo and pull in our own version.
+FROM overhangio/openedx-forum:13.0.0
 
-# Install dockerize to wait for mongodb/elasticsearch availability
-ARG DOCKERIZE_VERSION=v0.6.1
-RUN wget -O /tmp/dockerize.tar.gz https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
-    && tar -C /usr/local/bin -xzvf /tmp/dockerize.tar.gz \
-    && rm /tmp/dockerize.tar.gz
-
-# Create unprivileged "app" user
-RUN useradd --home-dir /app --create-home --shell /bin/bash --uid 1000 app
-
-# Copy custom scripts
-COPY ./bin /app/bin
-RUN chmod a+x /app/bin/*
-ENV PATH :${PATH}
-
-# From then on, run as unprivileged app user
 USER app
 
-# Install rake and bundler
-ENV PATH "/app/bin:/app/.gem/ruby/2.5.0/bin:$PATH"
-RUN gem install --user-install bundler --version 1.17.3
-RUN gem install --user-install rake --version 13.0.1
-
-# Install forum
-RUN git clone https://github.com/edx/cs_comments_service.git --branch {{ OPENEDX_COMMON_VERSION }} --depth 1 /app/cs_comments_service
-WORKDIR /app/cs_comments_service
-RUN bundle install --deployment
+# Override the MongoDB connection (replica set)
+COPY --chown=app:app ./mongoid.yml /app/cs_comments_service/config/mongoid.yml
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 
